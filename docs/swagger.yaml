@@ -1,0 +1,30 @@
+basePath: /
+host: localhost:8080
+info:
+  contact:
+    email: nourzad.shahrzad@gmail
+    name: API Support
+  description: 'This is a implemention of FizzBuzz in Golang. Github: ...'
+  title: FizzBuzz implemention in Go
+  version: "1.0"
+paths:
+  /:
+    post:
+      operationId: fizzbuzz
+      parameters:
+      - description: a number to check if its fizz, buzz, fizzbuzz or none
+        in: body
+        name: inputNumber
+        required: true
+        schema:
+          type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: return a fizz, buzz, fizzbuzz or the input number based on fizzbuzz
+        game
+swagger: "2.0"

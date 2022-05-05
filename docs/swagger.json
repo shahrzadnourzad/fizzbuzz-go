@@ -1,0 +1,44 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a implemention of FizzBuzz in Golang. Github: ...",
+        "title": "FizzBuzz implemention in Go",
+        "contact": {
+            "name": "API Support",
+            "email": "nourzad.shahrzad@gmail"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/": {
+            "post": {
+                "produces": [
+                    "text/plain"
+                ],
+                "summary": "return a fizz, buzz, fizzbuzz or the input number based on fizzbuzz game",
+                "operationId": "fizzbuzz",
+                "parameters": [
+                    {
+                        "description": "a number to check if its fizz, buzz, fizzbuzz or none",
+                        "name": "inputNumber",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
