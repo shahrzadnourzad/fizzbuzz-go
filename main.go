@@ -13,7 +13,8 @@ package main
 
 import (
 	"FizzBuzz/handlers"
-	"fmt"
+	"log"
+	"net/http"
 
 	_ "FizzBuzz/docs"
 
@@ -28,7 +29,11 @@ func main() {
 	router.POST("/", POSTFUNC)
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	router.Run()
+	err := router.Run()
+	if err != nil {
+		log.Fatalln("HTTP server error:", err)
+
+	}
 }
 
 // @Summary return a fizz, buzz, fizzbuzz or the input number based on fizzbuzz game
@@ -38,14 +43,30 @@ func main() {
 // @Success 200 {object} string
 // @Router / [post]
 func POSTFUNC(c *gin.Context) {
-	var con int
 
-	if err := c.ShouldBindJSON(&con); err != nil {
-		//fmt.Println("ERR in shouldbind", err)
-		panic(err)
+	var reqBody int
+	// log.Println("contenttype in binding", c.ContentType())
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		log.Println("request binding error ", err)
+		var errMsg string
+		if reqBody == 0 {
+			errMsg = "FizzBuzz Only accept normal numbers"
+		}
+
+		c.String(http.StatusBadRequest, "%s", errMsg+"\n")
+		return
+
 	}
-	res := handlers.FizzBuzz(&con)
-	fmt.Println(res)
-	c.String(200, "%s", res)
 
+	result, err := handlers.FizzBuzz(reqBody)
+
+	if err != nil {
+		errMsg := "Could not handel FizzBuzz\n"
+		log.Println(errMsg, err)
+		c.String(http.StatusInternalServerError, "%s", errMsg)
+		return
+
+	}
+
+	c.String(http.StatusOK, "%s", result)
 }
