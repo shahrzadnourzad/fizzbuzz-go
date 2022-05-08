@@ -1,52 +1,86 @@
 package handlers
 
 import (
-	"bytes"
+	"errors"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 )
 
-func FizzBuzz(c *int) string {
+func FizzBuzz(reqBody int) (string, error) {
 
-	con := *c
-	if con > 0 && con < 101 {
+	if reqBody >= 1 && reqBody <= 100 {
 
-		if con%3 == 0 && con%5 == 0 {
-			return `"FizzBuzz"` + "\n"
+		if reqBody%3 == 0 && reqBody%5 == 0 {
+			return `"FizzBuzz"` + "\n", nil
 
-		} else if con%3 == 0 {
-			return `"Fizz"` + "\n"
+		} else if reqBody%3 == 0 {
+			return `"Fizz"` + "\n", nil
 
-		} else if con%5 == 0 {
-			return `"Buzz"` + "\n"
+		} else if reqBody%5 == 0 {
+			return `"Buzz"` + "\n", nil
 
 		} else {
-			return `"` + strconv.Itoa(con) + `"` + "\n"
+			return `"` + strconv.Itoa(reqBody) + `"` + "\n", nil
 		}
 
 	} else {
-		return outsideIntervalFizzBuzz(&con)
-
+		resp, err := outsideIntervalFizzBuzz(reqBody)
+		return resp, err
 	}
 }
 
-func outsideIntervalFizzBuzz(c *int) string {
+func outsideIntervalFizzBuzz(reqBody int) (string, error) {
 
-	con := *c
-	data := []byte(strconv.Itoa(con))
-	res, err := http.Post("https://fizzbuzz-oracle.b17g.services/predict", "text/html; charset=UTF-8", bytes.NewBuffer(data))
-
-	if err != nil {
-		
-		panic(err)
+	data := (strconv.Itoa(reqBody))
+	client := http.Client{
+		Timeout: 5 * time.Second,
 	}
 
-	bytes, err := io.ReadAll(res.Body)
+	resp, err := client.Post("https://fizzbuzz-oracle.b17g.services/predict", "text/plain; charset=UTF-8", strings.NewReader(data))
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
-	return string(bytes)
+	if resp.StatusCode != http.StatusOK {
+		return "", errors.New("received" + strconv.Itoa(resp.StatusCode) + "from Oracle")
+	}
+
+	bytes, err := io.ReadAll(resp.Body)
+	if err!= nil{
+		return "",errors.New("can not read the oracle response body")
+	}
+	respBody := string(bytes)
+	defer resp.Body.Close()
+
+	contentType := resp.Header.Get("Content-Type")
+	if contentType != "text/plain; charset=utf-8" {
+		return "", errors.New("the respponse is not expected type")
+
+	}
+
+	if !eval(respBody, data) {
+		return "", errors.New("oracle response is not valid")
+	}
+	return respBody, nil
+}
+
+func eval(resp string, data string) bool {
+
+	expresp := []string{
+		`"Fizz"` + "\n",
+		`"Buzz"` + "\n",
+		`"FizzBuzz"` + "\n",
+		`"` + data + `"` + "\n",
+	}
+
+	for _, e := range expresp {
+		if resp == e {
+			return true
+		}
+	}
+
+	return false
 }
