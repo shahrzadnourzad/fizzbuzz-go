@@ -20,7 +20,7 @@ func TestFizz(t *testing.T) {
 	}
 
 	for _, num := range expres {
-		funcRes := handlers.FizzBuzz(&num.in)
+		funcRes, _ := handlers.FizzBuzz(num.in)
 		fmt.Println("funcres:", funcRes)
 		fmt.Println("num.wan:", num.want)
 		if funcRes != num.want {
